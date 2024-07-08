@@ -1,0 +1,11 @@
+extends layout
+
+block content
+
+  h1= title
+
+  ul 
+    li 
+      a(href='/catalog/toys') Toys: #{toy_count}
+    li 
+      a(href="/catalog/categories") Categories: #{category_count}

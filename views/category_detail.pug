@@ -1,0 +1,17 @@
+extends layout 
+
+block content 
+
+  h1= title 
+
+  p #[strong Name: ] #{category.name}
+  p #[strong Description: ] #{category.description} 
+  p #[strong Toys: ]
+    if toys 
+    each toy in toys 
+      p 
+        a(href=toy.url) #{toy.name}
+    else 
+      p No toys in this category yet.
+  p
+    a(href=category.url+"/update") Update Category

@@ -1,0 +1,16 @@
+extends layout 
+
+block content 
+
+  h1= title 
+
+  p #[strong Name: ] #{toy.name}
+  p #[strong Description: ] #{toy.description}
+  p #[strong Price: ] #{toy.price} 
+  p #[strong In Stock: ] #{toy.quantity_in_stock}
+  p #[strong Categories: ]
+    each category in toy.category 
+      p 
+        a(href=category.url) #{category.name}
+  p 
+    a(href=toy.url+"/update") Update Toy

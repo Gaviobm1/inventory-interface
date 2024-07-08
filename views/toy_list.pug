@@ -1,0 +1,11 @@
+extends layout 
+
+block content 
+
+  h1= title 
+
+  dl
+    each toy in toys 
+      dt 
+        a(href=toy.url) #{toy.name}
+      dd #{toy.description}

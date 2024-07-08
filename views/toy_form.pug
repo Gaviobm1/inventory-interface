@@ -1,0 +1,36 @@
+extends layout 
+
+block content 
+
+  h1=  title
+
+  form(method="POST")
+    .form-group 
+      label(for="name") Name: 
+      input#name.form-control(type="text" placeholder="Pokémon Barbie Cards etc..." name="name" required value=(toy===undefined ? "" : toy.name))
+    .form-group 
+      label(form="description") Description: 
+      input#description.form-control(type="text" placeholder="Consume, trade, consume, trade..." name="description", value=(toy===undefined ? "" : toy.description))
+    .form-group 
+      label(for="price") Price: 
+      input#price.form-control(type="text" placeholder="50" name="price" value=(toy===undefined?"":toy.price))
+    .form-group 
+      label(for="quantity_in_stock") In Stock: 
+      input#quantity_in_stock.form-control(type="number" placeholder="10" name="quantity_in_stock" value=(toy===undefined?"":toy.quantity_in_stock))
+    .form-group 
+      label Categories: 
+      div 
+        for category in categories 
+          div(style="display: inline; padding-right:10px;")
+            if category.checked 
+              input.checkbox-input(type="checkbox", name="category", id=category._id, value=category._id, checked)
+            else 
+              input.checkbox-input(type="checkbox", name="category", id=category._id, value=category._id)
+            label(for=category._id) &nbsp;#{category.name}
+    button.btn.btn-primary(type="submit") Submit
+
+
+  if errors 
+    ul 
+      for error in errors 
+        li!= error.msg 
