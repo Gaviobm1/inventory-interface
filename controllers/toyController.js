@@ -201,3 +201,16 @@ exports.toy_update_post = [
     }
   }),
 ];
+
+exports.toy_delete_get = asyncHandler(async (req, res, next) => {
+  const toy = await Toy.findById(req.params.id).exec();
+  res.render("toy_delete", {
+    title: "Delete Toy",
+    toy,
+  });
+});
+
+exports.toy_delete_post = asyncHandler(async (req, res, next) => {
+  await Toy.findByIdAndDelete(req.body.toyid).exec();
+  res.redirect("/catalog/toys");
+});

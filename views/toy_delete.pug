@@ -1,0 +1,14 @@
+extends layout 
+
+block content 
+
+  h1 #{title} 
+
+  p Are you sure you want to delete #{toy.name}?
+
+    form(method="POST")
+      div.form-group
+        input#toyid.form-control(type="hidden", name="toyid", value=toy._id)
+      button.btn.btn-primary(type="submit") Delete 
+  button.btn.btn-primary 
+    a(href=toy.url style="color:white; text-decoration:none;") Cancel

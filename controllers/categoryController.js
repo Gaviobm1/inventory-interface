@@ -118,3 +118,38 @@ exports.category_update_post = [
     }
   }),
 ];
+
+exports.category_delete_get = asyncHandler(async (req, res, next) => {
+  const [category, toys] = await Promise.all([
+    Category.findById(req.params.id).exec(),
+    Toy.find({ category: req.params.id }).sort({ name: 1 }).exec(),
+  ]);
+
+  if (category === null) {
+    res.redirect("/catelog/categories");
+  }
+
+  res.render("category_delete", {
+    title: "Delete Category",
+    category,
+    toys,
+  });
+});
+
+exports.category_delete_post = asyncHandler(async (req, res, next) => {
+  const [category, toys] = await Promise.all([
+    Category.findById(req.body.categoryid).exec(),
+    Toy.find({ category: req.body.categoryid }).sort({ name: 1 }).exec(),
+  ]);
+
+  if (toys.length > 0) {
+    res.render("category_delete", {
+      title: "Delete Category",
+      category,
+      toys,
+    });
+  } else {
+    await Category.findByIdAndDelete(req.body.categoryid).exec();
+    res.redirect("/catalog/categories");
+  }
+});

@@ -1,0 +1,21 @@
+extends layout 
+
+block content 
+
+  h1 #{title}
+
+  if toys.length 
+    p The following toys need to be deleted before deleting #{category.name}
+    ul 
+      each toy in toys 
+        li 
+          a(href=toy.url) #{toy.name} 
+  else 
+    p Are you sure you want to delete #{category.name}?
+      form(method="POST")
+        .form-group   
+          input#categoryid.form-control(type="hidden", name="categoryid", value=category._id)
+        button.btn.btn-primary(type="submit") Delete 
+
+    button.btn.btn-primary 
+        a(href=category.url, style="color:white; text-decoration:none;") Cancel
