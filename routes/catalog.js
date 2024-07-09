@@ -14,7 +14,7 @@ router.get("/toys/:id/update", auth, toy_controller.toy_update_get);
 
 router.post("/toys/:id/update", toy_controller.toy_update_post);
 
-router.get("/toys/:id/delete", toy_controller.toy_delete_get);
+router.get("/toys/:id/delete", auth, toy_controller.toy_delete_get);
 
 router.post("/toys/:id/delete", toy_controller.toy_delete_post);
 
@@ -26,11 +26,19 @@ router.get("/categories/create", category_controller.category_create_get);
 
 router.post("/categories/create", category_controller.category_create_post);
 
-router.get("/categories/:id/update", category_controller.category_update_get);
+router.get(
+  "/categories/:id/update",
+  auth,
+  category_controller.category_update_get
+);
 
 router.post("/categories/:id/update", category_controller.category_update_post);
 
-router.get("/categories/:id/delete", category_controller.category_delete_get);
+router.get(
+  "/categories/:id/delete",
+  auth,
+  category_controller.category_delete_get
+);
 
 router.post("/categories/:id/delete", category_controller.category_delete_post);
 
