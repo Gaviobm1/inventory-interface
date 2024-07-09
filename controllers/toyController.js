@@ -2,6 +2,9 @@ const Toy = require("../models/toy");
 const Category = require("../models/category");
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
+const auth = require("../auth");
+const uploadMiddleware = require("../uploadMiddleware");
+const upload = uploadMiddleware("/toy_photos");
 
 exports.index = asyncHandler(async (req, res, next) => {
   const [toyCount, categoryCount] = await Promise.all([
@@ -53,6 +56,7 @@ exports.toy_create_get = asyncHandler(async (req, res, next) => {
 });
 
 exports.toy_create_post = [
+  upload.single("image"),
   (req, res, next) => {
     if (!Array.isArray(req.body.category)) {
       req.body.category =
@@ -88,6 +92,7 @@ exports.toy_create_post = [
   body("category.*").escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
+
     const toy = new Toy({
       name: req.body.name,
       description: req.body.description,
@@ -95,6 +100,9 @@ exports.toy_create_post = [
       quantity_in_stock: req.body.quantity_in_stock,
       category: req.body.category,
     });
+    if (req.file) {
+      toy.image = req.file.path;
+    }
     if (!errors.isEmpty()) {
       const categories = await Category.find().sort({ name: 1 }).exec();
       for (const category of categories) {
@@ -139,6 +147,7 @@ exports.toy_update_get = asyncHandler(async (req, res, next) => {
 });
 
 exports.toy_update_post = [
+  upload.single("image"),
   (req, res, next) => {
     if (!Array.isArray(req.body.category)) {
       req.body.category =
@@ -182,6 +191,9 @@ exports.toy_update_post = [
       category: req.body.category,
       _id: req.params.id,
     });
+    if (req.file) {
+      toy.image = req.file.path;
+    }
     if (!errors.isEmpty()) {
       const categories = await Category.find().sort({ name: 1 }).exec();
 

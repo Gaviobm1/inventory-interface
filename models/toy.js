@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const toySchema = new Schema({
   name: { type: String, required: true, maxLength: 100 },
+  image: { type: String },
   description: { type: String, required: true },
   price: { type: Number, required: true },
   quantity_in_stock: { type: Number, required: true },

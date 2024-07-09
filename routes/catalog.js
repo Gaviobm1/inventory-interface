@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const auth = require("../auth");
 const toy_controller = require("../controllers/toyController");
 const category_controller = require("../controllers/categoryController");
 
@@ -10,7 +10,7 @@ router.get("/toys/create", toy_controller.toy_create_get);
 
 router.post("/toys/create", toy_controller.toy_create_post);
 
-router.get("/toys/:id/update", toy_controller.toy_update_get);
+router.get("/toys/:id/update", auth, toy_controller.toy_update_get);
 
 router.post("/toys/:id/update", toy_controller.toy_update_post);
 

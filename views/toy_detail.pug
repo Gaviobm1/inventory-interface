@@ -3,7 +3,8 @@ extends layout
 block content 
 
   h1= title 
-
+  if toy.image 
+    img(src=toy.image)
   p #[strong Name: ] #{toy.name}
   p #[strong Description: ] #{toy.description}
   p #[strong Price: ] #{toy.price} 

@@ -4,7 +4,7 @@ block content
 
   h1=  title
 
-  form(method="POST")
+  form(method="POST" enctype="multipart/form-data")
     .form-group 
       label(for="name") Name: 
       input#name.form-control(type="text" placeholder="Pokémon Barbie Cards etc..." name="name" required value=(toy===undefined ? "" : toy.name))
@@ -18,6 +18,9 @@ block content
       label(for="quantity_in_stock") In Stock: 
       input#quantity_in_stock.form-control(type="number" placeholder="10" name="quantity_in_stock" value=(toy===undefined?"":toy.quantity_in_stock))
     .form-group 
+      label(for="image") Image: 
+      input#image.form-control(type="file" name="image")
+    .form-group 
       label Categories: 
       div 
         for category in categories 
@@ -28,6 +31,8 @@ block content
               input.checkbox-input(type="checkbox", name="category", id=category._id, value=category._id)
             label(for=category._id) &nbsp;#{category.name}
     button.btn.btn-primary(type="submit") Submit
+  button.btn.btn-primary 
+    a(href=toy.url, style="color:white; text-decoration:none;") Cancel
 
 
   if errors 
