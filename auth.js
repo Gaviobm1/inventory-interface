@@ -23,7 +23,7 @@ const auth = (req, res, next) => {
   if (!(username === "gav" && password === "password1")) {
     return reject();
   }
-  console.log("username:", username, "PAssword", password);
+  console.log("username:", username, "Password", password);
 
   next();
 };

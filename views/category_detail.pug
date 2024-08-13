@@ -7,13 +7,13 @@ block content
   p #[strong Name: ] #{category.name}
   p #[strong Description: ] #{category.description} 
   p #[strong Toys: ]
-    if toys 
-    each toy in toys 
+    if category.toys 
+    each toy in category.toys 
       p 
         a(href=toy.url) #{toy.name}
     else 
       p No toys in this category yet.
   p
-    a(href=category.url+"/update") Update Category
+    a(href=`${category.url}/update`) Update Category
   p 
-    a(href=category.url+"/delete") Delete Category
+    a(href=`${category.url}/delete`) Delete Category

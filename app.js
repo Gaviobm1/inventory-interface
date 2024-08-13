@@ -1,7 +1,6 @@
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
-const mongoose = require("mongoose");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 require("dotenv").config();
@@ -9,13 +8,6 @@ require("dotenv").config();
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 const catalogRouter = require("./routes/catalog");
-
-const mongoDB = process.env.MONGO_DB_URI;
-
-mongoose
-  .connect(mongoDB)
-  .then((result) => app.listen(8080))
-  .catch((err) => console.log(err));
 
 var app = express();
 
@@ -47,6 +39,10 @@ app.use(function (err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render("error");
+});
+
+app.listen(8000, () => {
+  console.log("Listening on 8000");
 });
 
 module.exports = app;

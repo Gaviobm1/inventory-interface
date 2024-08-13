@@ -1,15 +1,13 @@
-const Toy = require("../models/toy");
-const Category = require("../models/category");
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
-const auth = require("../auth");
 const uploadMiddleware = require("../uploadMiddleware");
 const upload = uploadMiddleware("/toy_photos");
+const db = require("../db/query");
 
 exports.index = asyncHandler(async (req, res, next) => {
   const [toyCount, categoryCount] = await Promise.all([
-    Toy.countDocuments().exec(),
-    Category.countDocuments().exec(),
+    db.getToyCount(),
+    db.getCategoryCount(),
   ]);
   res.render("index", {
     title: "Toy Inventory Home",
@@ -19,8 +17,7 @@ exports.index = asyncHandler(async (req, res, next) => {
 });
 
 exports.toy_list = asyncHandler(async (req, res, next) => {
-  const toys = await Toy.find().populate("category").sort({ name: 1 }).exec();
-
+  const toys = await db.getToys();
   if (toys === null) {
     const error = new Error("Toys not found");
     error.status = 404;
@@ -34,8 +31,7 @@ exports.toy_list = asyncHandler(async (req, res, next) => {
 });
 
 exports.toy_detail = asyncHandler(async (req, res, next) => {
-  const toy = await Toy.findById(req.params.id).populate("category").exec();
-
+  const toy = await db.getToy(req.params.id);
   if (toy === null) {
     const error = new Error("Toy not found");
     error.status = 404;
@@ -48,7 +44,7 @@ exports.toy_detail = asyncHandler(async (req, res, next) => {
 });
 
 exports.toy_create_get = asyncHandler(async (req, res, next) => {
-  const categories = await Category.find().sort({ name: 1 }).exec();
+  const categories = await db.getCategories();
   res.render("toy_form", {
     title: "Add Toy",
     categories,
@@ -92,21 +88,16 @@ exports.toy_create_post = [
   body("category.*").escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
-
-    const toy = new Toy({
-      name: req.body.name,
-      description: req.body.description,
-      price: req.body.price,
-      quantity_in_stock: req.body.quantity_in_stock,
-      category: req.body.category,
-    });
-    if (req.file) {
-      toy.image = req.file.path;
-    }
     if (!errors.isEmpty()) {
-      const categories = await Category.find().sort({ name: 1 }).exec();
+      const categories = await db.getCategories();
+      const toy = {
+        name: req.body.name,
+        description: req.body.description,
+        price: req.body.price,
+        quantity_in_stock: req.body.quantity_in_stock,
+      };
       for (const category of categories) {
-        if (toy.category.includes(category._id)) {
+        if (req.body.category.includes(category.name)) {
           category.checked = "true";
         }
       }
@@ -117,18 +108,23 @@ exports.toy_create_post = [
         errors: errors.array(),
       });
     } else {
-      await toy.save();
-      res.redirect(toy.url);
+      const newToy = await db.createToy(
+        req.body.name,
+        req.body.description,
+        req.body.price,
+        req.body.quantity_in_stock,
+        req.body.category
+      );
+      res.redirect(newToy.url);
     }
   }),
 ];
 
 exports.toy_update_get = asyncHandler(async (req, res, next) => {
-  const [toy, categories] = await Promise.all([
-    Toy.findById(req.params.id).exec(),
-    Category.find().sort({ name: 1 }).exec(),
-  ]);
-
+  const toy = await db.getToy(req.params.id);
+  const categories = await db.getCategories();
+  const catArr = [];
+  toy.category.forEach((category) => catArr.push(category.name));
   if (toy === null) {
     const err = new Error("Toy not found");
     err.status = 404;
@@ -136,7 +132,7 @@ exports.toy_update_get = asyncHandler(async (req, res, next) => {
   }
 
   categories.forEach((category) => {
-    if (toy.category.includes(category._id)) category.checked = "checked";
+    if (catArr.includes(category.name)) category.checked = "checked";
   });
 
   res.render("toy_form", {
@@ -183,23 +179,15 @@ exports.toy_update_post = [
   body("category.*").escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
-    const toy = new Toy({
-      name: req.body.name,
-      description: req.body.description,
-      price: req.body.price,
-      quantity_in_stock: req.body.quantity_in_stock,
-      category: req.body.category,
-      _id: req.params.id,
-    });
-    if (req.file) {
-      toy.image = req.file.path;
-    }
     if (!errors.isEmpty()) {
-      const categories = await Category.find().sort({ name: 1 }).exec();
+      const toy = await db.getToy(req.params.id);
+      const categories = await db.getCategories();
+      const catArr = [];
+      toy.category.forEach((category) => catArr.push(category.name));
 
-      for (const category in categories) {
-        if (toy.category.includes(category._id)) category.checked = "true";
-      }
+      categories.forEach((category) => {
+        if (catArr.includes(category.name)) category.checked = "checked";
+      });
 
       res.render("toy_form", {
         title: "Update Toy",
@@ -208,14 +196,22 @@ exports.toy_update_post = [
         errors: errors.array(),
       });
     } else {
-      const updatedToy = await Toy.findByIdAndUpdate(req.params.id, toy, {});
+      await db.updateToy(
+        req.params.id,
+        req.body.name,
+        req.body.description,
+        req.body.price,
+        req.body.quantity_in_stock,
+        req.body.category
+      );
+      const updatedToy = await db.getToy(req.params.id);
       res.redirect(updatedToy.url);
     }
   }),
 ];
 
 exports.toy_delete_get = asyncHandler(async (req, res, next) => {
-  const toy = await Toy.findById(req.params.id).exec();
+  const toy = await db.getToy(req.params.id);
   res.render("toy_delete", {
     title: "Delete Toy",
     toy,
@@ -223,6 +219,6 @@ exports.toy_delete_get = asyncHandler(async (req, res, next) => {
 });
 
 exports.toy_delete_post = asyncHandler(async (req, res, next) => {
-  await Toy.findByIdAndDelete(req.body.toyid).exec();
+  await db.deleteToy(req.params.id);
   res.redirect("/catalog/toys");
 });

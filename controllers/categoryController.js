@@ -1,10 +1,9 @@
-const Category = require("../models/category");
-const Toy = require("../models/toy");
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
+const db = require("../db/query");
 
 exports.category_list = asyncHandler(async (req, res, next) => {
-  const categories = await Category.find().sort({ name: 1 }).exec();
+  const categories = await db.getCategories();
 
   res.render("category_list", {
     title: "All Categories",
@@ -13,11 +12,8 @@ exports.category_list = asyncHandler(async (req, res, next) => {
 });
 
 exports.category_detail = asyncHandler(async (req, res, next) => {
-  const [category, toys] = await Promise.all([
-    Category.findById(req.params.id).exec(),
-    Toy.find({ category: req.params.id }).sort({ name: 1 }).exec(),
-  ]);
-
+  const category = await db.getCategory(req.params.id);
+  console.log(category);
   if (category === null) {
     const error = new Error("Category not found");
     error.status = 404;
@@ -27,7 +23,6 @@ exports.category_detail = asyncHandler(async (req, res, next) => {
   res.render("category_detail", {
     title: "Category Details",
     category,
-    toys,
   });
 });
 
@@ -46,10 +41,10 @@ exports.category_create_post = [
     .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
-    const category = new Category({
+    const category = {
       name: req.body.name,
       description: req.body.description,
-    });
+    };
     if (!errors.isEmpty()) {
       res.render("category_form", {
         title: "Create Category",
@@ -58,27 +53,27 @@ exports.category_create_post = [
       });
       return;
     } else {
-      const categoryExists = await Category.findOne({ name: req.body.name })
-        .collation({ locale: "en", strength: 2 })
-        .exec();
+      const categoryExists = await db.categoryExists();
       if (categoryExists) {
         res.redirect(categoryExists.url);
       } else {
-        await category.save();
-        res.redirect(category.url);
+        const newCategory = await db.createCategory(
+          req.body.name,
+          req.body.description
+        );
+        res.redirect(newCategory.url);
       }
     }
   }),
 ];
 
 exports.category_update_get = asyncHandler(async (req, res, next) => {
-  const category = await Category.findById(req.params.id).exec();
+  const category = await db.getCategory(req.params.id);
   if (category === null) {
     const error = new Error("Category not found");
     error.status = 404;
     return next(error);
   }
-
   res.render("category_form", {
     title: "Update Category",
     category,
@@ -96,11 +91,11 @@ exports.category_update_post = [
     .escape(),
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
-    const category = new Category({
+    const category = {
       name: req.body.name,
       description: req.body.description,
-      _id: req.params.id,
-    });
+      id: req.params.id,
+    };
     if (!errors.isEmpty()) {
       res.render("category_form", {
         title: "Update Category",
@@ -109,10 +104,10 @@ exports.category_update_post = [
       });
       return;
     } else {
-      const updatedCategory = await Category.findByIdAndUpdate(
-        req.params.id,
-        category,
-        {}
+      const updatedCategory = await db.updateCategory(
+        req.body.name,
+        req.body.description,
+        req.params.id
       );
       res.redirect(updatedCategory.url);
     }
@@ -121,8 +116,8 @@ exports.category_update_post = [
 
 exports.category_delete_get = asyncHandler(async (req, res, next) => {
   const [category, toys] = await Promise.all([
-    Category.findById(req.params.id).exec(),
-    Toy.find({ category: req.params.id }).sort({ name: 1 }).exec(),
+    db.getCategory(req.params.id),
+    db.getToysInCategory(req.params.id),
   ]);
 
   if (category === null) {
@@ -138,10 +133,10 @@ exports.category_delete_get = asyncHandler(async (req, res, next) => {
 
 exports.category_delete_post = asyncHandler(async (req, res, next) => {
   const [category, toys] = await Promise.all([
-    Category.findById(req.body.categoryid).exec(),
-    Toy.find({ category: req.body.categoryid }).sort({ name: 1 }).exec(),
+    db.getCategory(req.params.id),
+    db.getToysInCategory(req.params.id),
   ]);
-
+  console.log(toys.length);
   if (toys.length > 0) {
     res.render("category_delete", {
       title: "Delete Category",
@@ -149,7 +144,7 @@ exports.category_delete_post = asyncHandler(async (req, res, next) => {
       toys,
     });
   } else {
-    await Category.findByIdAndDelete(req.body.categoryid).exec();
+    await db.deleteCategory(req.params.id);
     res.redirect("/catalog/categories");
   }
 });
